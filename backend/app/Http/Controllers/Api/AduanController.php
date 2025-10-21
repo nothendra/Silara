@@ -38,7 +38,7 @@ class AduanController extends Controller
             'deskripsi' => 'required|string|min:10',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'tanggal' => 'required|date',
-            'nama_pengadu' => 'required|string|max:100',
+            'user_id' => 'required|int|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -55,8 +55,8 @@ class AduanController extends Controller
             'deskripsi' => $request->deskripsi,
             'foto' => $fotoPath,
             'tanggal' => $request->tanggal,
-            'nama_pengadu' => $request->nama_pengadu,
-            'status' => 'terkirim', // default status ketika baru dikirim
+            'user_id' => $request->user_id,
+            'status' => '1', // default status ketika baru dikirim
         ]);
 
         return response()->json([
@@ -70,7 +70,7 @@ class AduanController extends Controller
     public function getByWarga(Request $request)
     {
         $user = $request->user(); // user login (misalnya auth:api)
-        $aduans = Aduan::where('nama_pengadu', $user->name)
+        $aduans = Aduan::where('user_id', $user->name)
                         ->orderBy('created_at', 'desc')
                         ->get();
 
@@ -84,7 +84,7 @@ class AduanController extends Controller
     public function updateStatus(Request $request, $id)
 {
     $validator = Validator::make($request->all(), [
-        'status' => 'required|in:terkirim,dalam_proses,selesai'
+        'status' => 'required|in:1,2,3'
     ]);
 
     if ($validator->fails()) {

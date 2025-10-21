@@ -15,6 +15,6 @@ class Aduan extends Model
         'images',
         'status',
         'tanggal',
-        'nama_pengadu',
+        'user_id',
     ];
 }
