@@ -9,12 +9,28 @@ use Illuminate\Support\Facades\Validator;
 
 class AduanController extends Controller
 {
-    public function index()
+    // Menampilkan semua aduan (bisa difilter dengan status)
+    public function index(Request $request)
     {
-        $aduan = Aduan::latest()->get();
-        return response()->json(['data' => $aduan], 200);
+        $status = $request->query('status'); // ?status=terkirim
+        $query = Aduan::query();
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $aduan = $query->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => $status 
+                ? "Daftar aduan dengan status '$status'" 
+                : "Daftar semua aduan",
+            'data' => $aduan
+        ], 200);
     }
 
+    // Menyimpan aduan baru
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -40,12 +56,54 @@ class AduanController extends Controller
             'foto' => $fotoPath,
             'tanggal' => $request->tanggal,
             'nama_pengadu' => $request->nama_pengadu,
-            'status' => 'pending',
+            'status' => 'terkirim', // default status ketika baru dikirim
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Aduan berhasil ditambahkan!',
             'data' => $aduan
         ], 201);
     }
+
+    // Menampilkan aduan milik warga login
+    public function getByWarga(Request $request)
+    {
+        $user = $request->user(); // user login (misalnya auth:api)
+        $aduans = Aduan::where('nama_pengadu', $user->name)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $aduans
+        ]);
+    }
+
+    // Untuk RT: ubah status aduan (diproses / selesai)
+    public function updateStatus(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'status' => 'required|in:terkirim,dalam_proses,selesai'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $aduan = Aduan::findOrFail($id);
+
+    // optional: cek apakah RT berwenang untuk aduan ini
+    // if ($aduan->rt_id !== auth()->user()->id) {
+    //     return response()->json(['message'=>'Unauthorized'], 403);
+    // }
+
+    $aduan->update(['status' => $request->status]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Status aduan berhasil diperbarui!',
+        'data' => $aduan
+    ]);
+}
 }

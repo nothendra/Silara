@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 
 class AuthController extends Controller
 {
+    // register user baru
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -35,6 +36,8 @@ class AuthController extends Controller
         ]);
     }
 
+    // login user
+
     public function login(Request $request)
     {
         $validated = $request->validate([
@@ -56,7 +59,7 @@ class AuthController extends Controller
             'token' => $token
         ]);
     }
-
+    // logout user
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
