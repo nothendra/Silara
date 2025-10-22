@@ -34,4 +34,6 @@ Route::middleware(['auth:sanctum', 'role:rt'])->group(function () {
 
     // ubah status aduan (dalam_proses / selesai)
     Route::put('/aduan/{id}/status', [AduanController::class, 'updateStatus']);
+    // lihat detail aduan tertentu
+    Route::get('/aduan/{id}', [AduanController::class, 'show']); // Method 'show' tidak ada
 });

@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Validator;
 
 class AduanController extends Controller
 {
-    // Menampilkan semua aduan (bisa difilter dengan status)
+    // Menampilkan semua aduan (bisa difilter dengan status) - HANYA RT & ADMIN
     public function index(Request $request)
     {
-        $status = $request->query('status'); // ?status=terkirim
-        $query = Aduan::query();
+        $status = $request->query('status');
+        $query = Aduan::with('user:id,name,email'); // Load relasi user
 
         if ($status) {
             $query->where('status', $status);
@@ -30,7 +30,7 @@ class AduanController extends Controller
         ], 200);
     }
 
-    // Menyimpan aduan baru
+    // Menyimpan aduan baru - WARGA
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -38,11 +38,13 @@ class AduanController extends Controller
             'deskripsi' => 'required|string|min:10',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'tanggal' => 'required|date',
-            'user_id' => 'required|int|max:100',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $fotoPath = null;
@@ -55,9 +57,12 @@ class AduanController extends Controller
             'deskripsi' => $request->deskripsi,
             'foto' => $fotoPath,
             'tanggal' => $request->tanggal,
-            'user_id' => $request->user_id,
-            'status' => '1', // default status ketika baru dikirim
+            'user_id' => auth()->id(),
+            'status' => 1,
         ]);
+
+        // Load relasi user
+        $aduan->load('user:id,name,email');
 
         return response()->json([
             'success' => true,
@@ -66,44 +71,78 @@ class AduanController extends Controller
         ], 201);
     }
 
-    // Menampilkan aduan milik warga login
+    // Menampilkan aduan milik warga login - WARGA
     public function getByWarga(Request $request)
     {
-        $user = $request->user(); // user login (misalnya auth:api)
-        $aduans = Aduan::where('user_id', $user->name)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+        $user = $request->user();
+        $aduans = Aduan::where('user_id', $user->id)
+            ->with('user:id,name,email')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
             'data' => $aduans
-        ]);
+        ], 200);
     }
 
-    // Untuk RT: ubah status aduan (diproses / selesai)
+    // Menampilkan detail aduan tertentu
+    public function show($id)
+    {
+        $aduan = Aduan::with('user:id,name,email')->find($id);
+
+        if (!$aduan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aduan tidak ditemukan'
+            ], 404);
+        }
+
+        $user = auth()->user();
+        
+        // Hanya RT, Admin, atau pemilik aduan yang bisa akses
+        if (!in_array($user->role, ['rt', 'admin']) && $aduan->user_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses ke aduan ini'
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $aduan
+        ], 200);
+    }
+
+    // Untuk RT & Admin: ubah status aduan
     public function updateStatus(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'status' => 'required|in:1,2,3'
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|integer|in:1,2,3'
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $aduan = Aduan::with('user:id,name,email')->find($id);
+
+        if (!$aduan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aduan tidak ditemukan'
+            ], 404);
+        }
+
+        $aduan->update(['status' => $request->status]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status aduan berhasil diperbarui!',
+            'data' => $aduan
+        ], 200);
     }
-
-    $aduan = Aduan::findOrFail($id);
-
-    // optional: cek apakah RT berwenang untuk aduan ini
-    // if ($aduan->rt_id !== auth()->user()->id) {
-    //     return response()->json(['message'=>'Unauthorized'], 403);
-    // }
-
-    $aduan->update(['status' => $request->status]);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Status aduan berhasil diperbarui!',
-        'data' => $aduan
-    ]);
-}
 }

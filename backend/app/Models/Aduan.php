@@ -12,7 +12,7 @@ class Aduan extends Model
     protected $fillable = [
         'judul',
         'deskripsi',
-        'images',
+        'foto',
         'status',
         'tanggal',
         'user_id',

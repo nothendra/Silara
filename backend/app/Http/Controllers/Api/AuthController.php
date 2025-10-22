@@ -17,7 +17,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string',
+            'role' => 'required|string|in:warga', // Role harus salah satu dari warga, rt, atau admin
         ]);
 
         $user = User::create([

@@ -14,8 +14,8 @@ return new class extends Migration
             $table->text('deskripsi');
             $table->string('foto')->nullable();
             $table->date('tanggal');
-            $table->int('user_id');
-            $table->int('status')->default('1'); // pending, diproses, selesai
+            $table->integer('user_id');
+            $table->integer('status')->default('1'); // pending, diproses, selesai
             $table->timestamps();
         });
     }
