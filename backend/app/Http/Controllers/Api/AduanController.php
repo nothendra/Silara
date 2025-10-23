@@ -16,6 +16,14 @@ class AduanController extends Controller
         $query = Aduan::with('user:id,name,email'); // Load relasi user
 
         if ($status) {
+            // Batasi hanya 1, 2, 3
+            if (!in_array((int) $status, [1, 2, 3])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Status tidak valid. Gunakan hanya 1 (tunggu di konfirmasi), 2 (dalam_proses), atau 3 (selesai)."
+                ], 400);
+            }
+
             $query->where('status', $status);
         }
 
@@ -23,12 +31,13 @@ class AduanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $status 
-                ? "Daftar aduan dengan status '$status'" 
+            'message' => $status
+                ? "Daftar aduan dengan status '$status'"
                 : "Daftar semua aduan",
             'data' => $aduan
         ], 200);
     }
+
 
     // Menyimpan aduan baru - WARGA
     public function store(Request $request)
@@ -99,7 +108,7 @@ class AduanController extends Controller
         }
 
         $user = auth()->user();
-        
+
         // Hanya RT, Admin, atau pemilik aduan yang bisa akses
         if (!in_array($user->role, ['rt', 'admin']) && $aduan->user_id !== $user->id) {
             return response()->json([
