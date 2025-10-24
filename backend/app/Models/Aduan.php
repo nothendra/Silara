@@ -27,7 +27,7 @@ class Aduan extends Model
     // Accessor untuk nama status
     public function getStatusTextAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             1 => 'Pending',
             2 => 'Dalam Proses',
             3 => 'Selesai',
@@ -39,5 +39,9 @@ class Aduan extends Model
     public function getFotoUrlAttribute()
     {
         return $this->foto ? asset('storage/' . $this->foto) : null;
+    }
+    public function recommendations()
+    {
+        return $this->hasMany(Recommendation::class);
     }
 }
