@@ -17,6 +17,7 @@ class Aduan extends Model
         'tanggal',
         'user_id',
     ];
+     protected $appends = ['foto_url', 'status_text'];
 
     // Relasi ke User
     public function user()

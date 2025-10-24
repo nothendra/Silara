@@ -19,7 +19,7 @@ class Recommendation extends Model
         'admin_notes',
         'approved_at',
     ];
-
+    protected $appends = ['approval_status_text', 'recommended_status_text'];
     protected $casts = [
         'approved_at' => 'datetime',
     ];
@@ -45,7 +45,7 @@ class Recommendation extends Model
     // Accessor untuk status approval text
     public function getApprovalStatusTextAttribute()
     {
-        return match($this->approval_status) {
+        return match ($this->approval_status) {
             'pending' => 'Menunggu Persetujuan',
             'approved' => 'Disetujui',
             'rejected' => 'Ditolak',
@@ -56,7 +56,7 @@ class Recommendation extends Model
     // Accessor untuk recommended status text
     public function getRecommendedStatusTextAttribute()
     {
-        return match($this->recommended_status) {
+        return match ($this->recommended_status) {
             1 => 'Menunggu Konfirmasi',
             2 => 'Dalam Proses',
             3 => 'Selesai',
