@@ -1,0 +1,11 @@
+{
+  "files.watcherExclude": {
+    "**/frontend-old/**": true
+  },
+  "search.exclude": {
+    "**/frontend-old/**": true
+  },
+  "files.exclude": {
+    "**/frontend-old/**": true
+  }
+}
