@@ -1,0 +1,30 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: rt-postgres
+    environment:
+      POSTGRES_DB: lapor_pak
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: "silara123"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - silara-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: rt-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - silara-network
+
+networks:
+  silara-network:
+    driver: bridge
